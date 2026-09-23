@@ -1,0 +1,123 @@
+{
+  "info": {
+    "name": "CRM School",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "url", "value": "http://localhost:5000" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@gmail.com\",\n  \"password\": \"admin\"\n}"
+        },
+        "url": "{{url}}/auth/login"
+      }
+    },
+    {
+      "name": "Auth me",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{url}}/auth/me"
+      }
+    },
+    {
+      "name": "Orders list",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{url}}/orders?page=1&order=-id"
+      }
+    },
+    {
+      "name": "Orders excel",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{url}}/orders/excel"
+      }
+    },
+    {
+      "name": "Add comment",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{ \"text\": \"взяла в роботу\" }" },
+        "url": "{{url}}/orders/1/comments"
+      }
+    },
+    {
+      "name": "Edit order",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{ \"status\": \"New\", \"name\": \"Test\" }" },
+        "url": "{{url}}/orders/1"
+      }
+    },
+    {
+      "name": "Groups",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{url}}/groups"
+      }
+    },
+    {
+      "name": "Create group",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{ \"name\": \"sep-2026\" }" },
+        "url": "{{url}}/groups"
+      }
+    },
+    {
+      "name": "Admin stats",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{url}}/admin/stats"
+      }
+    },
+    {
+      "name": "Admin managers",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{url}}/admin/managers?page=1"
+      }
+    },
+    {
+      "name": "Create manager",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"manager@gmail.com\",\n  \"name\": \"Anna\",\n  \"surname\": \"Koval\"\n}"
+        },
+        "url": "{{url}}/admin/managers"
+      }
+    }
+  ]
+}
