@@ -1,8 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { Navigate } from 'react-router-dom';
 import api from '../api';
 import Header from '../components/Header';
+import { getUser } from '../auth';
 
 export default function AdminPage() {
+  const user = getUser();
   const [stats, setStats] = useState<any>({});
   const [managers, setManagers] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -23,6 +26,10 @@ export default function AdminPage() {
     load();
   }, [page]);
 
+  if (user?.role !== 'admin') {
+    return <Navigate to="/orders?page=1&order=-id" replace />;
+  }
+
   const create = async (e: FormEvent) => {
     e.preventDefault();
     await api.post('/admin/managers', form);
@@ -42,12 +49,12 @@ export default function AdminPage() {
       <Header />
       <div className="admin-wrap">
         <div className="stats">
-          <div>total: {stats.total}</div>
-          <div>Agree: {stats.Agree}</div>
-          <div>In work: {stats['In work']}</div>
-          <div>Disagree: {stats.Disagree}</div>
-          <div>Dubbing: {stats.Dubbing}</div>
-          <div>New: {stats.New}</div>
+          <div className="stat-box"><span>total</span>{stats.total ?? 0}</div>
+          <div className="stat-box"><span>Agree</span>{stats.Agree ?? 0}</div>
+          <div className="stat-box"><span>In work</span>{stats['In work'] ?? 0}</div>
+          <div className="stat-box"><span>Disagree</span>{stats.Disagree ?? 0}</div>
+          <div className="stat-box"><span>Dubbing</span>{stats.Dubbing ?? 0}</div>
+          <div className="stat-box"><span>New</span>{stats.New ?? 0}</div>
         </div>
         <button className="create-btn" onClick={() => setOpen(true)}>Create</button>
         {msg && <p className="copied">{msg}</p>}

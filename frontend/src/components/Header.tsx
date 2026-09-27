@@ -13,7 +13,7 @@ export default function Header() {
 
   return (
     <header className="header">
-      <div className="logo">CRM</div>
+      <Link to="/orders?page=1&order=-id" className="logo">CRM Programming School</Link>
       <div className="header-right">
         <span>{user?.name} {user?.surname}</span>
         {user?.role === 'admin' && (

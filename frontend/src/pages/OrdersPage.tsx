@@ -29,28 +29,43 @@ const COLUMNS = [
 
 function getPages(page: number, total: number) {
   if (total <= 1) return [1];
-  // 4 режими як в ТЗ
+  if (total <= 5) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const arr: (number | string)[] = [];
+  const add = (x: number | string) => {
+    if (arr[arr.length - 1] !== x) arr.push(x);
+  };
+
+  // а) перша сторінка
   if (page === 1) {
-    const arr: (number | string)[] = [1];
-    if (total >= 2) arr.push(2);
-    if (total >= 3) arr.push(3);
-    if (total > 4) arr.push('...');
-    if (total > 3) arr.push(total);
+    add(1);
+    add(2);
+    add(3);
+    add('...');
+    add(total);
     return arr;
   }
+
+  // г) остання сторінка
   if (page === total) {
-    const arr: (number | string)[] = [1];
-    if (total > 4) arr.push('...');
-    if (total - 2 > 1) arr.push(total - 2);
-    if (total - 1 > 1) arr.push(total - 1);
-    arr.push(total);
+    add(1);
+    add('...');
+    add(total - 2);
+    add(total - 1);
+    add(total);
     return arr;
   }
-  const arr: (number | string)[] = [1, '...', page - 1, page, page + 1];
-  if (page + 1 < total) {
-    arr.push('...');
-    arr.push(total);
-  }
+
+  // б/в) середина — без дубля 1, якщо page = 2
+  add(1);
+  if (page - 1 > 2) add('...');
+  if (page - 1 > 1) add(page - 1);
+  add(page);
+  if (page + 1 < total) add(page + 1);
+  if (page + 1 < total - 1) add('...');
+  add(total);
   return arr;
 }
 
@@ -96,6 +111,9 @@ export default function OrdersPage() {
     age: params.get('age') || '',
   });
 
+  const paramsRef = useRef(params);
+  paramsRef.current = params;
+
   const skipDebounce = useRef(true);
   useEffect(() => {
     if (skipDebounce.current) {
@@ -103,7 +121,7 @@ export default function OrdersPage() {
       return;
     }
     const t = setTimeout(() => {
-      const next = new URLSearchParams(params);
+      const next = new URLSearchParams(paramsRef.current);
       (['name', 'surname', 'email', 'phone', 'age'] as const).forEach((k) => {
         if (localFilters[k]) next.set(k, localFilters[k]);
         else next.delete(k);
@@ -166,6 +184,7 @@ export default function OrdersPage() {
   };
 
   const resetFilters = () => {
+    skipDebounce.current = true;
     setLocalFilters({ name: '', surname: '', email: '', phone: '', age: '' });
     setParams({ page: '1', order: '-id' });
   };
@@ -206,6 +225,7 @@ export default function OrdersPage() {
         <button onClick={downloadExcel}>excel</button>
       </div>
 
+      <div className="table-wrap">
       <table className="orders-table">
         <thead>
           <tr>
@@ -221,7 +241,13 @@ export default function OrdersPage() {
             <Fragment key={row.id}>
               <tr onClick={() => setOpenId(openId === Number(row.id) ? null : Number(row.id))}>
                 {COLUMNS.map((col) => (
-                  <td key={col}>{row[col] === null || row[col] === undefined ? '' : String(row[col]).slice(0, 24)}</td>
+                  <td key={col}>
+                    {col === 'created_at' && row[col]
+                      ? new Date(row[col]).toLocaleString()
+                      : row[col] === null || row[col] === undefined
+                        ? ''
+                        : String(row[col]).slice(0, 24)}
+                  </td>
                 ))}
               </tr>
               {openId === Number(row.id) && (
@@ -250,6 +276,7 @@ export default function OrdersPage() {
           ))}
         </tbody>
       </table>
+      </div>
 
       <div className="pager">
         <button disabled={page <= 1} onClick={() => setFilter('page', String(page - 1))}>{'<'}</button>
@@ -275,21 +302,22 @@ export default function OrdersPage() {
         <div className="modal" onClick={() => setEdit(null)}>
           <form className="modal-box" onClick={(e) => e.stopPropagation()} onSubmit={saveEdit}>
             <h3>EDIT</h3>
+            <div className="modal-grid">
             <label>Group
               <select value={edit.group || ''} onChange={(e) => setEdit({ ...edit, group: e.target.value })}>
                 <option value=""></option>
                 {groups.map((g) => <option key={g._id} value={g.name}>{g.name}</option>)}
               </select>
             </label>
-            <div className="add-group">
-              <input value={newGroup} onChange={(e) => setNewGroup(e.target.value)} placeholder="new group" />
-              <button type="button" onClick={addGroup}>ADD GROUP</button>
-            </div>
             <label>Status
               <select value={edit.status || ''} onChange={(e) => setEdit({ ...edit, status: e.target.value })}>
                 {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </label>
+            <div className="add-group">
+              <input value={newGroup} onChange={(e) => setNewGroup(e.target.value)} placeholder="new group" />
+              <button type="button" onClick={addGroup}>ADD GROUP</button>
+            </div>
             <label>Name <input value={edit.name || ''} onChange={(e) => setEdit({ ...edit, name: e.target.value })} /></label>
             <label>Sum <input value={edit.sum ?? ''} onChange={(e) => setEdit({ ...edit, sum: e.target.value })} /></label>
             <label>Surname <input value={edit.surname || ''} onChange={(e) => setEdit({ ...edit, surname: e.target.value })} /></label>
@@ -312,6 +340,7 @@ export default function OrdersPage() {
                 {COURSE_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </label>
+            </div>
             <div className="modal-actions">
               <button type="button" onClick={() => setEdit(null)}>Close</button>
               <button type="submit">Submit</button>

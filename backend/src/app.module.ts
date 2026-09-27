@@ -23,12 +23,17 @@ import { Order } from './orders/order.entity';
         database: config.get('MYSQL_DB'),
         entities: [Order],
         synchronize: true,
+        extra:
+          config.get('MYSQL_SSL') === 'true'
+            ? { ssl: { rejectUnauthorized: false } }
+            : undefined,
       }),
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         uri: config.get('MONGO_URI'),
+        dbName: 'crm_school',
       }),
     }),
     UsersModule,
