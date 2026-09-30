@@ -1,99 +1,152 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# CRM Programming School
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Внутрішня CRM для обліку заявок студентів на курси (фінальний проєкт).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Реєстрації через сайт немає. Акаунти менеджерів створює тільки **admin**.
 
-## Description
+## Версії середовища
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Node.js 20** (перевірка: `node -v`)
+- **npm** (йде разом з Node, перевірка: `npm -v`)
+- Backend: **NestJS 10**, TypeScript 5
+- Frontend: **React 19**, **Vite 8**, TypeScript
+- Бази: **MySQL 8** (хмара) + **MongoDB Atlas**
 
-## Project setup
+ОС: Windows. Команди нижче — для PowerShell.
 
-```bash
-$ npm install
+## Чому дві бази
+
+- **MySQL** — таблиця `orders` з офіційного дампу школи. Заявки вже мають фіксовану схему, їх зручно фільтрувати і сортувати SQL-запитами.
+- **MongoDB** — користувачі (admin / manager), коментарі, групи, токени активації. Цих сутностей немає в SQL-дампі, тому вони зберігаються окремо.
+
+Можна працювати і з хмарними базами (для здачі), і з локальними (для розробки без інтернету).
+
+## Структура репозиторію
+
+- `backend/` — API (NestJS)
+- `frontend/` — інтерфейс (React)
+- `dumps/orders.sql` — дамп заявок
+- `scripts/` — скрипти запуску локальних баз і заливки дампу
+- `CRM.postman_collection.json` — колекція запитів Postman
+
+## 1. Клонування
+
+```
+git clone <url-репозиторію>
+cd final-project_2026
 ```
 
-## Compile and run the project
+Гілка для здачі: **master**.
 
-```bash
-# development
-$ npm run start
+## 2. Файл налаштувань бекенду
 
-# watch mode
-$ npm run start:dev
+Скопіюй приклад і заповни своїми даними:
 
-# production mode
-$ npm run start:prod
+```
+cd backend
+copy .env.example .env
 ```
 
-## Run tests
+Приклад `backend/.env` для **хмарних** баз:
 
-```bash
-# unit tests
-$ npm run test
+```
+PORT=5000
+JWT_SECRET=super_secret_key_for_crm
+FRONTEND_URL=http://localhost:5173
 
-# e2e tests
-$ npm run test:e2e
+MYSQL_HOST=sql.freedb.tech
+MYSQL_PORT=3306
+MYSQL_USER=твій_юзер
+MYSQL_PASSWORD=твій_пароль
+MYSQL_DB=назва_бази_з_сайту
+MYSQL_SSL=true
 
-# test coverage
-$ npm run test:cov
+MONGO_URI=mongodb+srv://USER:PASSWORD@cluster.mongodb.net/crm_school
 ```
 
-## Deployment
+- `MYSQL_DB` має бути **точною назвою бази** з панелі FreeDB (часто не `crm_school`).
+- У MongoDB Atlas: **Network Access** → дозволити свій IP або `0.0.0.0/0`.
+- Файл `.env` у git не потрапляє. Паролі в README і в чат не пишемо.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Для **локальних** баз залиш значення як у `.env.example` (`localhost`, порт MySQL `3306`).
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## 3. Заливка дампу заявок (MySQL)
 
-```bash
-$ npm install -g mau
-$ mau deploy
+Файл: `dumps/orders.sql` (~500 заявок).
+
+З кореня проєкту:
+
+```
+node .\scripts\import-orders.js
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Скрипт читає `backend/.env` і заливає таблицю `orders`.
+Якщо в терміналі `Done. Orders in DB: 500` — дамп на місці.
 
-## Resources
+## 4. Запуск бекенду
 
-Check out a few resources that may come in handy when working with NestJS:
+```
+cd backend
+npm install
+npm run start:dev
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Має з’явитись: `server started on 5000`
 
-## Support
+- API: http://localhost:5000
+- Swagger (документація API): http://localhost:5000/docs
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Якщо помилка MongoDB про IP whitelist — повернись до Network Access в Atlas і перезапусти бекенд.
 
-## Stay in touch
+## 5. Запуск фронтенду
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Другий термінал:
 
-## License
+```
+cd frontend
+npm install
+npm run dev
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Сайт: http://localhost:5173  
+Якщо порт зайнятий, Vite відкриє `5174` — це нормально, логін все одно працює.
+
+У браузері одразу відкривається сторінка логіна.
+
+## 6. Вхід
+
+- email: `admin@gmail.com`
+- password: `admin`
+
+Роль: **admin**. Після входу — сторінка заявок.
+
+## Локальні бази (необов’язково)
+
+Якщо хмара недоступна:
+
+```
+powershell -ExecutionPolicy Bypass -File .\scripts\start-local-db.ps1
+```
+
+Піднімає MySQL на `3306` і MongoDB на `27017`, створює БД `crm_school`.
+Після цього в `backend/.env` має бути `localhost`, і знову `npm run start:dev`.
+
+Docker не обов’язковий.
+
+## Postman
+
+Файл: `CRM.postman_collection.json`
+
+1. Імпортуй колекцію в Postman.
+2. Зроби `Auth login`.
+3. Скопіюй `token` з відповіді в змінну колекції.
+4. Далі можна викликати `/orders`, `/admin/...` тощо.
+
+## Коротко про функціонал
+
+- заявки: 25 на сторінку, сортування кліком по колонці, фільтри в URL
+- коментар закріплює заявку за менеджером, статус стає `In work`
+- EDIT лише нічиєї заявки або своєї; статус `New` знову робить заявку вільною
+- Excel за поточними фільтрами
+- адмін: статистика, створення менеджера, Activate / Recovery password, Ban / Unban
+- посилання активації копіюється в буфер, токен живе **30 хвилин**

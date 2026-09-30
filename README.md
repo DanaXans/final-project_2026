@@ -1,83 +1,152 @@
 # CRM Programming School
 
-Фінальний проєкт: внутрішня CRM для обліку заявок студентів на курси.
+Внутрішня CRM для обліку заявок студентів на курси (фінальний проєкт).
 
-## Стек
-- Node.js **20**
-- Backend: NestJS 10, TypeORM, Mongoose, JWT, Swagger
-- Frontend: React 19, Vite, TypeScript, React Router, Axios
-- Бази: **MySQL** + **MongoDB**
+Реєстрації через сайт немає. Акаунти менеджерів створює тільки **admin**.
+
+## Версії середовища
+
+- **Node.js 20** (перевірка: `node -v`)
+- **npm** (йде разом з Node, перевірка: `npm -v`)
+- Backend: **NestJS 10**, TypeScript 5
+- Frontend: **React 19**, **Vite 8**, TypeScript
+- Бази: **MySQL 8** (хмара) + **MongoDB Atlas**
+
+ОС: Windows. Команди нижче — для PowerShell.
 
 ## Чому дві бази
-- **MySQL** — таблиця `orders` з офіційного дампу школи (структуровані заявки).
-- **MongoDB** — користувачі, ролі, коментарі, групи, токени активації. Цього немає в SQL-дампі, тому зручніше тримати як документи.
 
-## Що потрібно встановити
-- Node.js 20 (перевірка: `node -v`)
-- npm (йде разом з Node)
-- Інтернет (хмарні бази або перше завантаження локальних)
+- **MySQL** — таблиця `orders` з офіційного дампу школи. Заявки вже мають фіксовану схему, їх зручно фільтрувати і сортувати SQL-запитами.
+- **MongoDB** — користувачі (admin / manager), коментарі, групи, токени активації. Цих сутностей немає в SQL-дампі, тому вони зберігаються окремо.
 
-Docker не обов'язковий.
+Можна працювати і з хмарними базами (для здачі), і з локальними (для розробки без інтернету).
 
-## Налаштування `.env`
-Файл: `backend/.env` (скопіюй з `backend/.env.example`).
+## Структура репозиторію
 
-Для здачі використовуємо хмарні бази:
-- MySQL (наприклад FreeDB): `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DB`, `MYSQL_SSL=true`
-- MongoDB Atlas: `MONGO_URI` (у Network Access дозволь IP або `0.0.0.0/0`)
+- `backend/` — API (NestJS)
+- `frontend/` — інтерфейс (React)
+- `dumps/orders.sql` — дамп заявок
+- `scripts/` — скрипти запуску локальних баз і заливки дампу
+- `CRM.postman_collection.json` — колекція запитів Postman
 
-Паролі в git не комітимо.
+## 1. Клонування
 
-## Запуск проєкту
+```
+git clone <url-репозиторію>
+cd final-project_2026
+```
 
-1. Бекенд:
+Гілка для здачі: **master**.
+
+## 2. Файл налаштувань бекенду
+
+Скопіюй приклад і заповни своїми даними:
+
+```
+cd backend
+copy .env.example .env
+```
+
+Приклад `backend/.env` для **хмарних** баз:
+
+```
+PORT=5000
+JWT_SECRET=super_secret_key_for_crm
+FRONTEND_URL=http://localhost:5173
+
+MYSQL_HOST=sql.freedb.tech
+MYSQL_PORT=3306
+MYSQL_USER=твій_юзер
+MYSQL_PASSWORD=твій_пароль
+MYSQL_DB=назва_бази_з_сайту
+MYSQL_SSL=true
+
+MONGO_URI=mongodb+srv://USER:PASSWORD@cluster.mongodb.net/crm_school
+```
+
+- `MYSQL_DB` має бути **точною назвою бази** з панелі FreeDB (часто не `crm_school`).
+- У MongoDB Atlas: **Network Access** → дозволити свій IP або `0.0.0.0/0`.
+- Файл `.env` у git не потрапляє. Паролі в README і в чат не пишемо.
+
+Для **локальних** баз залиш значення як у `.env.example` (`localhost`, порт MySQL `3306`).
+
+## 3. Заливка дампу заявок (MySQL)
+
+Файл: `dumps/orders.sql` (~500 заявок).
+
+З кореня проєкту:
+
+```
+node .\scripts\import-orders.js
+```
+
+Скрипт читає `backend/.env` і заливає таблицю `orders`.
+Якщо в терміналі `Done. Orders in DB: 500` — дамп на місці.
+
+## 4. Запуск бекенду
+
 ```
 cd backend
 npm install
 npm run start:dev
 ```
-API: http://localhost:5000  
-Документація Swagger: http://localhost:5000/docs
 
-2. Фронтенд (інший термінал):
+Має з’явитись: `server started on 5000`
+
+- API: http://localhost:5000
+- Swagger (документація API): http://localhost:5000/docs
+
+Якщо помилка MongoDB про IP whitelist — повернись до Network Access в Atlas і перезапусти бекенд.
+
+## 5. Запуск фронтенду
+
+Другий термінал:
+
 ```
 cd frontend
 npm install
 npm run dev
 ```
+
 Сайт: http://localhost:5173  
-(якщо порт зайнятий, Vite відкриє 5174 — це нормально)
+Якщо порт зайнятий, Vite відкриє `5174` — це нормально, логін все одно працює.
 
-3. Відкрий браузер → сторінка логіна.
+У браузері одразу відкривається сторінка логіна.
 
-## Логін за замовчуванням
+## 6. Вхід
+
 - email: `admin@gmail.com`
 - password: `admin`
 
-Публічної реєстрації немає. Менеджерів створює тільки admin.
+Роль: **admin**. Після входу — сторінка заявок.
 
-## Як залити дамп заявок у MySQL
-Файл дампу: `dumps/orders.sql`
+## Локальні бази (необов’язково)
 
-```
-node .\scripts\import-orders.js
-```
-Скрипт читає дані з `backend/.env` і заливає заявки в хмарну MySQL.
+Якщо хмара недоступна:
 
-## Локальні бази (якщо хмара недоступна)
 ```
 powershell -ExecutionPolicy Bypass -File .\scripts\start-local-db.ps1
 ```
-Піднімає MySQL на `3306` і Mongo на `27017`. Тоді в `.env` має бути `localhost`.
 
-## Колекція Postman
-Файл у корені репозиторію: `CRM.postman_collection.json`  
-Після логіна підстав JWT у змінну `token`.
+Піднімає MySQL на `3306` і MongoDB на `27017`, створює БД `crm_school`.
+Після цього в `backend/.env` має бути `localhost`, і знову `npm run start:dev`.
 
-## Основний функціонал
-- заявки: пагінація 25, сортування, фільтри в queryParams
-- коментар закріплює заявку за менеджером, статус `In work`
-- EDIT тільки своєї заявки (або нічиєї); статус `New` звільняє заявку
+Docker не обов’язковий.
+
+## Postman
+
+Файл: `CRM.postman_collection.json`
+
+1. Імпортуй колекцію в Postman.
+2. Зроби `Auth login`.
+3. Скопіюй `token` з відповіді в змінну колекції.
+4. Далі можна викликати `/orders`, `/admin/...` тощо.
+
+## Коротко про функціонал
+
+- заявки: 25 на сторінку, сортування кліком по колонці, фільтри в URL
+- коментар закріплює заявку за менеджером, статус стає `In work`
+- EDIT лише нічиєї заявки або своєї; статус `New` знову робить заявку вільною
 - Excel за поточними фільтрами
-- адмін-панель: статистика, створення менеджера, Activate / Recovery, Ban / Unban
-- активація за посиланням, токен живе 30 хвилин
+- адмін: статистика, створення менеджера, Activate / Recovery password, Ban / Unban
+- посилання активації копіюється в буфер, токен живе **30 хвилин**
