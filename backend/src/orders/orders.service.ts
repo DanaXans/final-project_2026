@@ -199,11 +199,27 @@ export class OrdersService {
     for (const row of raw) {
       const count = Number(row.count);
       result.total += count;
-      if (row.status && result[row.status] !== undefined) {
-        result[row.status] = count;
+      const key = this.normalizeStatus(row.status);
+      if (result[key] !== undefined) {
+        result[key] += count;
       }
     }
     return result;
+  }
+
+  private normalizeStatus(status: string) {
+    if (!status || String(status).trim() === '') {
+      return 'New';
+    }
+    const map = {
+      new: 'New',
+      'in work': 'In work',
+      agree: 'Agree',
+      disagree: 'Disagree',
+      dubbing: 'Dubbing',
+    };
+    const lower = String(status).trim().toLowerCase();
+    return map[lower] || status;
   }
 
   async statsForManager(managerKeys: string[]) {
@@ -221,8 +237,9 @@ export class OrdersService {
     for (const row of raw) {
       const count = Number(row.count);
       result.total += count;
-      if (row.status && result[row.status] !== undefined) {
-        result[row.status] = count;
+      const key = this.normalizeStatus(row.status);
+      if (result[key] !== undefined) {
+        result[key] += count;
       }
     }
     return result;

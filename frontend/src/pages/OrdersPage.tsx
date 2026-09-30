@@ -58,15 +58,15 @@ function getPages(page: number, total: number) {
     return arr;
   }
 
-  // б/в) середина — без дубля 1, якщо page = 2
-  add(1);
-  if (page - 1 > 2) add('...');
-  if (page - 1 > 1) add(page - 1);
-  add(page);
-  if (page + 1 < total) add(page + 1);
-  if (page + 1 < total - 1) add('...');
-  add(total);
-  return arr;
+  // б) перша половина
+  if (page <= Math.ceil(total / 2)) {
+    if (page === 2) return [1, 2, 3, '...', total];
+    return [1, '...', page - 1, page, page + 1, '...', total];
+  }
+
+  // в) друга половина
+  if (page === total - 1) return [1, '...', total - 2, total - 1, total];
+  return [1, '...', page - 1, page, page + 1, total];
 }
 
 export default function OrdersPage() {
